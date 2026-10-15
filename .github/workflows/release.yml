@@ -1,0 +1,77 @@
+name: Release
+
+# Push a tag like v1.3.0 → universal build, Developer ID signing, Apple notarization,
+# and a GitHub Release with the DMG. Secrets are listed in DISTRIBUTION.md.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # build number = commit count
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Check secrets
+        env:
+          DEVELOPER_ID_P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          DEVELOPER_ID_P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=0
+          for name in DEVELOPER_ID_P12_BASE64 DEVELOPER_ID_P12_PASSWORD APPLE_ID APPLE_APP_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then echo "::error::Missing repository secret $name — see DISTRIBUTION.md"; missing=1; fi
+          done
+          exit $missing
+
+      - name: Import Developer ID certificate
+        env:
+          DEVELOPER_ID_P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          DEVELOPER_ID_P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+          echo "$DEVELOPER_ID_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/developer-id.p12" -P "$DEVELOPER_ID_P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          # shellcheck disable=SC2046
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          rm -f "$RUNNER_TEMP/developer-id.p12"
+          security find-identity -v -p codesigning "$KEYCHAIN"
+
+      - name: Build, sign and notarize
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: ./release.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NOTES="$(awk -v v="$VERSION" '/^## \[/ { p = index($0, "[" v "]") > 0; next } p' CHANGELOG.md)"
+          [ -n "$NOTES" ] || NOTES="See [CHANGELOG.md](CHANGELOG.md)."
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/Hush-$VERSION.dmg" "dist/Hush-$VERSION.dmg.sha256" \
+            --title "Hush $VERSION" \
+            --notes "$NOTES"$'\n\n'"**Install:** open the DMG, drag Hush to Applications. Requires macOS 14.2 or later."
+
+      - name: Remove signing keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true

@@ -1,0 +1,48 @@
+name: Bug report
+description: Sound leaking through, a row in the wrong place, or anything else broken
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected, and what you heard or saw instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: when
+    attributes:
+      label: When does it happen?
+      options:
+        - Continuously
+        - Only right when an app or simulator launches
+        - After switching output device
+        - After waking from sleep
+        - After updating or restarting Hush
+        - Other (describe above)
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: e.g. macOS 26.1 (Apple silicon)
+    validations:
+      required: true
+  - type: input
+    id: hush
+    attributes:
+      label: Hush version
+      placeholder: e.g. 1.3.0
+    validations:
+      required: true
+  - type: textarea
+    id: panel
+    attributes:
+      label: What does the Hush panel show?
+      description: Which row the app or simulator appears under, and any red error text. A screenshot helps.
+  - type: input
+    id: output
+    attributes:
+      label: Output device
+      placeholder: e.g. MacBook Pro Speakers, AirPods Pro, USB interface

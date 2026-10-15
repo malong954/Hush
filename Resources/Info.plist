@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>Hush</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.flipdigitallabs.hush</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Hush</string>
+	<key>CFBundleDisplayName</key>
+	<string>Hush</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.3.0</string>
+	<key>CFBundleVersion</key>
+	<string>5</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.developer-tools</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Flip Digital Labs</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.2</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Hush never uses your microphone. macOS may ask when an output device (AirPods, USB headset) also has a mic.</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Hush routes each app's audio through a private tap so it can mute or turn down individual apps. Nothing is recorded or saved.</string>
+</dict>
+</plist>

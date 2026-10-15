@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: How Hush works
+    url: https://github.com/malong954/Hush#how-it-works
+    about: Read this first for questions about browsers, permissions or relaunches.
